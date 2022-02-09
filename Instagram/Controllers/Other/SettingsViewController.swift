@@ -6,24 +6,151 @@
 //
 
 import UIKit
+import SafariServices
 
-class SettingsViewController: UIViewController {
+struct SettingCellModel {
+    let title: String
+    let handler: (()->Void)
+}
 
+/// ViewController that show users settings
+final class SettingsViewController: UIViewController {
+
+    private let tableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .grouped)
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        return tableView
+    }()
+    
+    var data = [[SettingCellModel]]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
+        configureModels()
+        view.backgroundColor = .systemBackground
+        view.addSubview(tableView)
+        tableView.delegate = self
+        tableView.dataSource = self
+    }
+ 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        tableView.frame = view.bounds
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    private func configureModels() {
+        data.append([
+            SettingCellModel(title: "Edit Profile", handler: { [weak self] in
+                self?.didTapEditProfile()
+            }),
+            SettingCellModel(title: "Invite Friends", handler: { [weak self] in
+                self?.didTapInviteFriends()
+            }),
+            SettingCellModel(title: "Save Original Posts", handler: { [weak self] in
+                self?.didTapSaveOriginalPosts()
+            })
+        ])
+        
+        data.append([
+            SettingCellModel(title: "Privacy Policy", handler: { [weak self] in
+                self?.openUrl(type: .privacy)
+            }),
+            SettingCellModel(title: "Terms of Service", handler: { [weak self] in
+                self?.openUrl(type: .terms)
+            }),
+            SettingCellModel(title: "Help / Feedback", handler: { [weak self] in
+                self?.openUrl(type: .help)
+            })
+        ])
+        
+        data.append([
+            SettingCellModel(title: "Log Out", handler: { [weak self] in
+                self?.logOutDidTapped()
+            })
+        ])
     }
-    */
+    
+    enum SettingsUrlType {
+        case terms, privacy, help
+    }
+    
+    private func openUrl(type: SettingsUrlType) {
+        let urlString: String
+        switch type {
+        case .help: urlString = "https://help.instagram.com"
+        case .terms: urlString = "https://help.instagram.com/581066165581870"
+        case .privacy: urlString = "https://help.instagram.com/519522125107875"
+        }
+        
+        guard let url = URL(string: urlString) else { return }
+        
+        let vc = SFSafariViewController(url: url)
+        present(vc, animated: true)
 
+    }
+    
+    private func didTapEditProfile() {
+        let vc = EditProfileViewController()
+        vc.title = "Edit Profile"
+        let navVC = UINavigationController(rootViewController: vc)
+        navVC.modalPresentationStyle = .fullScreen
+        present(navVC, animated: true)
+    }
+    
+    private func didTapInviteFriends() {
+        
+    }
+    
+    private func didTapSaveOriginalPosts() {
+        
+    }
+    
+    private func logOutDidTapped() {
+        
+        let alertSheet = UIAlertController(title: "Log Out", message: "Are you sure you want to log out?", preferredStyle: .actionSheet)
+        alertSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alertSheet.addAction(UIAlertAction(title: "Log Out", style: .destructive, handler: { _ in
+            AuthManager.shared.logOutUser { success in
+                DispatchQueue.main.async {
+                    if success {
+                        let vc = LoginViewController()
+                        vc.modalPresentationStyle = .fullScreen
+                        self.present(vc, animated: true) {
+                            self.navigationController?.popToRootViewController(animated: false)
+                            self.tabBarController?.selectedIndex = 0
+                        }
+                    } else {
+                        fatalError("Could not log out user")
+                    }
+                }
+            }
+        }))
+        present(alertSheet, animated: true)
+        
+    }
+    
+}
+
+extension SettingsViewController: UITableViewDelegate, UITableViewDataSource {
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return data.count
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return data[section].count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        cell.textLabel?.text = data[indexPath.section][indexPath.row].title
+        cell.accessoryType = .disclosureIndicator
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        data[indexPath.section][indexPath.row].handler()
+    }
 }
