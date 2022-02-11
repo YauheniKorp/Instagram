@@ -12,6 +12,8 @@ final class ProfileViewController: UIViewController {
 
     var collectionView: UICollectionView?
     
+    private var usersPosts = [UserPost]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -63,11 +65,16 @@ extension ProfileViewController: UICollectionViewDelegate, UICollectionViewDataS
         if section == 0 {
             return 0
         }
+//        return usersPosts.count
         return 30
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+//        let model = usersPosts[indexPath.row]
+        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCollectionViewCell.identifier, for: indexPath) as! PhotoCollectionViewCell
+//        cell.configure(model)
         cell.configure("moun")
         return cell
     }
@@ -84,6 +91,7 @@ extension ProfileViewController: UICollectionViewDelegate, UICollectionViewDataS
         }
         
         let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: ProfileInfoHeaderCollectionReusableView.identifier, for: indexPath) as! ProfileInfoHeaderCollectionReusableView
+        header.delegate = self
         return header
     }
     
@@ -100,7 +108,39 @@ extension ProfileViewController: UICollectionViewDelegate, UICollectionViewDataS
 //    }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        collectionView.deselectItem(at: indexPath, animated: true)
+        let model = usersPosts[indexPath.row]
+        let vc = PostViewController(model: nil)
+        vc.title = "Post"
+        vc.navigationItem.largeTitleDisplayMode = .never
+        navigationController?.pushViewController(vc, animated: true)
     }
+    
+}
+
+extension ProfileViewController: ProfileInfoHeaderCollectionReusableViewDelegate {
+    func profileHeaderDidTapPostButton(_ header: ProfileInfoHeaderCollectionReusableView) {
+        collectionView?.scrollToItem(at: IndexPath(item: 0, section: 1), at: .top, animated: true)
+    }
+    
+    func profileHeaderDidTapFollowersButton(_ header: ProfileInfoHeaderCollectionReusableView) {
+        let vc = ListViewController()
+        vc.navigationItem.largeTitleDisplayMode = .never
+        vc.title = "Followers"
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    func profileHeaderDidTapFollowingButton(_ header: ProfileInfoHeaderCollectionReusableView) {
+        let vc = ListViewController()
+        vc.navigationItem.largeTitleDisplayMode = .never
+        vc.title = "Following"
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    func profileHeaderDidTapEditProfileButton(_ header: ProfileInfoHeaderCollectionReusableView) {
+        let vc = EditProfileViewController()
+        vc.title = "Edit Profile"
+        present(UINavigationController(rootViewController: vc), animated: true)
+    }
+    
     
 }
