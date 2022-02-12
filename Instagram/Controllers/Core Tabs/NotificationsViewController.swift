@@ -9,16 +9,20 @@ import UIKit
 
 class NotificationsViewController: UIViewController {
 
+    
+    
     private let tableView: UITableView = {
         let tableView = UITableView()
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         return tableView
     }()
     
+    private let noNotifications = UIView()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.title = "Notifications"
+        navigationItem.title = "Notifications"
         view.backgroundColor = .systemBackground
         view.addSubview(tableView)
         tableView.delegate = self
