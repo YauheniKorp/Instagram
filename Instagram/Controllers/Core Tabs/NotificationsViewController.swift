@@ -9,7 +9,7 @@ import UIKit
 
 enum UserNotificationType {
     case like(post: UserPost)
-    case follow
+    case follow(state: FollowState)
 }
 
 struct UserNotification {
@@ -70,7 +70,7 @@ final class NotificationsViewController: UIViewController {
     private func fetchData() {
         let post = UserPost(identifier: "", thumbnailImage: URL(string: "https://www.google.com/")!, postURL: URL(string: "https://www.google.com/")!, caption: "", likeCount: [], comments: [], createdDate: Date(), postType: .photo, taggedUsers: [])
         for x in 0...100 {
-            models.append(UserNotification(type: x % 2 == 0 ? .like(post: post) : .follow, text: "Hello world!", user: User(username: "zhenya", bio: "", name: ("",""), birthDate: Date(), profilePhoto: URL(string: "https://www.google.com/")!, gender: .male, counts: UserCount(followers: 1, following: 1, posts: 1), joinDate: Date())))
+            models.append(UserNotification(type: x % 2 == 0 ? .like(post: post) : .follow(state: .not_following), text: "Hello world!", user: User(username: "zhenya", bio: "", name: ("",""), birthDate: Date(), profilePhoto: URL(string: "https://www.google.com/")!, gender: .male, counts: UserCount(followers: 1, following: 1, posts: 1), joinDate: Date())))
         }
     }
 }
@@ -104,14 +104,20 @@ extension NotificationsViewController: UITableViewDelegate, UITableViewDataSourc
 
 extension NotificationsViewController: NotificationLikeEventTableViewCellDelegate {
     func didTapRelatedPostButton(model: UserNotification) {
-        print("liked post")
-        // open post
-        
+        switch model.type {
+        case .like(let post):
+            let vc = PostViewController(model: post)
+            vc.title = post.postType.rawValue
+            vc.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(vc, animated: true)
+        default:
+            fatalError("Dev Issue: Should never get called")
+        }
     }
 }
 
 extension NotificationsViewController: NotificationFollowEventTableViewCellDelegate {
-    func followAndUnfollowDidTapp(model: String) {
+    func followAndUnfollowDidTapp(model: UserNotification) {
         print("tapped button")
         // perform database update
     }
